@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="author" content="Шабан Владимир">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMYK – RGB – HLS | Шабан Владимир</title>
+  <style>
+    :root {
+      --bg-main: #f1f5f9;
+      --card-bg: #ffffff;
+      --card-inner: #f8fafc;
+      --border-color: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent-blue: #0284c7;
+      --rgb-accent: #4f46e5;
+      --cmyk-accent: #0891b2;
+      --hls-accent: #db2777;
+      --slider-rail: #e2e8f0;
+      --input-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 1040px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 32px 28px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-area {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .header-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .header-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .top-panel {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 768px) {
+      .top-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-block {
+      background: var(--card-inner);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px;
+      position: relative;
+    }
+
+    .block-label {
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .color-preview-box {
+      width: 100%;
+      height: 100%;
+      min-height: 90px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      transition: background-color 0.05s ease, box-shadow 0.2s ease;
+    }
+
+    .palette-box-trigger {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .palette-box-trigger:hover {
+      transform: scale(1.05);
+      border-color: var(--accent-blue);
+    }
+
+    .native-color-input {
+      position: absolute;
+      top: -20px;
+      left: -20px;
+      width: 120px;
+      height: 120px;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .hex-input-field {
+      width: 125px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 1.1rem;
+      font-family: monospace;
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .hex-input-field:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .models-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .model-card {
+      background: var(--card-inner);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .model-card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title-rgb { color: var(--rgb-accent); }
+    .title-cmyk { color: var(--cmyk-accent); }
+    .title-hls { color: var(--hls-accent); }
+
+    .channel-row {
+      display: grid;
+      grid-template-columns: 20px 1fr 58px;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .channel-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .channel-label {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .slider-track {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--slider-rail);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .slider-track::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #94a3b8;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    .slider-track::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      border-color: var(--accent-blue);
+    }
+
+    .num-input {
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-main);
+      padding: 6px 8px;
+      font-size: 0.95rem;
+      text-align: center;
+      outline: none;
+      font-weight: 600;
+      transition: border-color 0.15s ease;
+    }
+
+    .num-input:focus {
+      border-color: var(--accent-blue);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="header-area">
+    <h1 class="header-title">Интерактивные цветовые модели</h1>
+    <div class="header-subtitle">Нечетный вариант: CMYK – RGB – HLS</div>
+    <div class="header-subtitle">Шабан Владимир</div>
+  </div>
+
+  <div class="top-panel">
+    <div class="panel-block" style="padding: 12px;">
+      <div class="color-preview-box" id="main-preview"></div>
+    </div>
+
+    <div class="panel-block">
+      <span class="block-label">Палитра</span>
+      <div class="palette-box-trigger" id="palette-swatch" title="Выбор цвета">
+        <input type="color" class="native-color-input" id="native-picker" value="#924bff">
+      </div>
+    </div>
+
+    <div class="panel-block">
+      <span class="block-label">HEX-код</span>
+      <input type="text" class="hex-input-field" id="hex-input" value="#924BFF" maxlength="7" autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+
+  <div class="models-grid">
+    <div class="model-card">
+      <div class="model-card-title title-rgb">
+        <span>RGB</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">[0 … 255]</span>
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">R</span>
+        <input type="range" min="0" max="255" value="146" class="slider-track" id="rgb-r-s">
+        <input type="text" inputmode="numeric" value="146" class="num-input" id="rgb-r-n" autocomplete="off">
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">G</span>
+        <input type="range" min="0" max="255" value="75" class="slider-track" id="rgb-g-s">
+        <input type="text" inputmode="numeric" value="75" class="num-input" id="rgb-g-n" autocomplete="off">
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">B</span>
+        <input type="range" min="0" max="255" value="255" class="slider-track" id="rgb-b-s">
+        <input type="text" inputmode="numeric" value="255" class="num-input" id="rgb-b-n" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-title title-cmyk">
+        <span>CMYK</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">[0 … 100%]</span>
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">C</span>
+        <input type="range" min="0" max="100" value="43" class="slider-track" id="cmyk-c-s">
+        <input type="text" inputmode="numeric" value="43" class="num-input" id="cmyk-c-n" autocomplete="off">
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">M</span>
+        <input type="range" min="0" max="100" value="71" class="slider-track" id="cmyk-m-s">
+        <input type="text" inputmode="numeric" value="71" class="num-input" id="cmyk-m-n" autocomplete="off">
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">Y</span>
+        <input type="range" min="0" max="100" value="0" class="slider-track" id="cmyk-y-s">
+        <input type="text" inputmode="numeric" value="0" class="num-input" id="cmyk-y-n" autocomplete="off">
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">K</span>
+        <input type="range" min="0" max="100" value="0" class="slider-track" id="cmyk-k-s">
+        <input type="text" inputmode="numeric" value="0" class="num-input" id="cmyk-k-n" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-card-title title-hls">
+        <span>HLS</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">[360°, 100%, 100%]</span>
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">H</span>
+        <input type="range" min="0" max="360" value="264" class="slider-track" id="hls-h-s">
+        <input type="text" inputmode="numeric" value="264" class="num-input" id="hls-h-n" autocomplete="off">
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">L</span>
+        <input type="range" min="0" max="100" value="65" class="slider-track" id="hls-l-s">
+        <input type="text" inputmode="numeric" value="65" class="num-input" id="hls-l-n" autocomplete="off">
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">S</span>
+        <input type="range" min="0" max="100" value="100" class="slider-track" id="hls-s-s">
+        <input type="text" inputmode="numeric" value="100" class="num-input" id="hls-s-n" autocomplete="off">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function rgbToCmyk(r, g, b) {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const k = Math.min(1 - rn, 1 - gn, 1 - bn);
+  if (k >= 0.999999) {
+    return { c: 0, m: 0, y: 0, k: 100 };
+  }
+  const c = (1 - rn - k) / (1 - k);
+  const m = (1 - gn - k) / (1 - k);
+  const y = (1 - bn - k) / (1 - k);
+  return {
+    c: Math.round(c * 100),
+    m: Math.round(m * 100),
+    y: Math.round(y * 100),
+    k: Math.round(k * 100)
+  };
+}
+
+function cmykToRgb(c, m, y, k) {
+  const cn = c / 100;
+  const mn = m / 100;
+  const yn = y / 100;
+  const kn = k / 100;
+  const r = 255 * (1 - cn) * (1 - kn);
+  const g = 255 * (1 - mn) * (1 - kn);
+  const b = 255 * (1 - yn) * (1 - kn);
+  return {
+    r: Math.min(255, Math.max(0, Math.round(r))),
+    g: Math.min(255, Math.max(0, Math.round(g))),
+    b: Math.min(255, Math.max(0, Math.round(b)))
+  };
+}
+
+function rgbToHls(r, g, b) {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const delta = max - min;
+  const l = (max + min) / 2;
+
+  let h = 0;
+  let s = 0;
+
+  if (delta !== 0) {
+    s = l <= 0.5 ? (delta / (max + min)) : (delta / (2.0 - max - min));
+    const rc = (max - rn) / delta;
+    const gc = (max - gn) / delta;
+    const bc = (max - bn) / delta;
+
+    if (rn === max) {
+      h = bc - gc;
+    } else if (gn === max) {
+      h = 2.0 + rc - bc;
+    } else {
+      h = 4.0 + gc - rc;
+    }
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+
+  return {
+    h: Math.round(h) % 360,
+    l: Math.round(l * 100),
+    s: Math.round(s * 100)
+  };
+}
+
+function hlsHelper(n1, n2, hue) {
+  let h = hue;
+  if (h > 360) h -= 360;
+  else if (h < 0) h += 360;
+
+  if (h < 60) return n1 + ((n2 - n1) * h) / 60;
+  if (h < 180) return n2;
+  if (h < 240) return n1 + ((n2 - n1) * (240 - h)) / 60;
+  return n1;
+}
+
+function hlsToRgb(h, l, s) {
+  const L = l / 100;
+  const S = s / 100;
+  if (S === 0) {
+    const val = Math.round(L * 255);
+    return { r: val, g: val, b: val };
+  }
+  const m2 = L <= 0.5 ? (L * (1 + S)) : (L + S - L * S);
+  const m1 = 2 * L - m2;
+
+  const r = hlsHelper(m1, m2, h + 120);
+  const g = hlsHelper(m1, m2, h);
+  const b = hlsHelper(m1, m2, h - 120);
+
+  return {
+    r: Math.min(255, Math.max(0, Math.round(r * 255))),
+    g: Math.min(255, Math.max(0, Math.round(g * 255))),
+    b: Math.min(255, Math.max(0, Math.round(b * 255)))
+  };
+}
+
+function toHex(val) {
+  return val.toString(16).padStart(2, "0").toUpperCase();
+}
+function rgbToHex(r, g, b) {
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+function hexToRgb(hex) {
+  const cleaned = hex.replace("#", "").trim();
+  if (!/^[0-9A-Fa-f]{6}$/.test(cleaned)) return null;
+  return {
+    r: parseInt(cleaned.substring(0, 2), 16),
+    g: parseInt(cleaned.substring(2, 4), 16),
+    b: parseInt(cleaned.substring(4, 6), 16)
+  };
+}
+
+let isUpdating = false;
+
+const dom = {
+  preview: document.getElementById("main-preview"),
+  paletteSwatch: document.getElementById("palette-swatch"),
+  nativePicker: document.getElementById("native-picker"),
+  hexInput: document.getElementById("hex-input"),
+
+  rgb: {
+    rS: document.getElementById("rgb-r-s"), rN: document.getElementById("rgb-r-n"),
+    gS: document.getElementById("rgb-g-s"), gN: document.getElementById("rgb-g-n"),
+    bS: document.getElementById("rgb-b-s"), bN: document.getElementById("rgb-b-n")
+  },
+  cmyk: {
+    cS: document.getElementById("cmyk-c-s"), cN: document.getElementById("cmyk-c-n"),
+    mS: document.getElementById("cmyk-m-s"), mN: document.getElementById("cmyk-m-n"),
+    yS: document.getElementById("cmyk-y-s"), yN: document.getElementById("cmyk-y-n"),
+    kS: document.getElementById("cmyk-k-s"), kN: document.getElementById("cmyk-k-n")
+  },
+  hls: {
+    hS: document.getElementById("hls-h-s"), hN: document.getElementById("hls-h-n"),
+    lS: document.getElementById("hls-l-s"), lN: document.getElementById("hls-l-n"),
+    sS: document.getElementById("hls-s-s"), sN: document.getElementById("hls-s-n")
+  }
+};
+
+function styleSlider(slider, color, max) {
+  const pct = (slider.value / max) * 100;
+  slider.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`;
+}
+
+function updateSlidersAesthetics() {
+  styleSlider(dom.rgb.rS, "#ef4444", 255);
+  styleSlider(dom.rgb.gS, "#22c55e", 255);
+  styleSlider(dom.rgb.bS, "#3b82f6", 255);
+
+  styleSlider(dom.cmyk.cS, "#06b6d4", 100);
+  styleSlider(dom.cmyk.mS, "#ec4899", 100);
+  styleSlider(dom.cmyk.yS, "#eab308", 100);
+  styleSlider(dom.cmyk.kS, "#64748b", 100);
+
+  dom.hls.hS.style.background = `linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)`;
+  styleSlider(dom.hls.lS, "#db2777", 100);
+  styleSlider(dom.hls.sS, "#db2777", 100);
+}
+
+function syncAll(r, g, b, caller) {
+  if (isUpdating) return;
+  isUpdating = true;
+
+  const hex = rgbToHex(r, g, b);
+  const rgbCss = `rgb(${r}, ${g}, ${b})`;
+
+  dom.preview.style.backgroundColor = rgbCss;
+  dom.preview.style.boxShadow = `0 8px 24px ${rgbCss}33`;
+  dom.paletteSwatch.style.backgroundColor = rgbCss;
+
+  if (caller !== "hex") {
+    dom.hexInput.value = hex;
+    dom.hexInput.style.borderColor = "";
+  }
+  if (caller !== "picker") dom.nativePicker.value = hex;
+
+  const cmyk = rgbToCmyk(r, g, b);
+  const hls = rgbToHls(r, g, b);
+
+  if (caller !== "rgb") {
+    dom.rgb.rS.value = dom.rgb.rN.value = r;
+    dom.rgb.gS.value = dom.rgb.gN.value = g;
+    dom.rgb.bS.value = dom.rgb.bN.value = b;
+    dom.rgb.rN.style.borderColor = "";
+    dom.rgb.gN.style.borderColor = "";
+    dom.rgb.bN.style.borderColor = "";
+  }
+  if (caller !== "cmyk") {
+    dom.cmyk.cS.value = dom.cmyk.cN.value = cmyk.c;
+    dom.cmyk.mS.value = dom.cmyk.mN.value = cmyk.m;
+    dom.cmyk.yS.value = dom.cmyk.yN.value = cmyk.y;
+    dom.cmyk.kS.value = dom.cmyk.kN.value = cmyk.k;
+    dom.cmyk.cN.style.borderColor = "";
+    dom.cmyk.mN.style.borderColor = "";
+    dom.cmyk.yN.style.borderColor = "";
+    dom.cmyk.kN.style.borderColor = "";
+  }
+  if (caller !== "hls") {
+    dom.hls.hS.value = dom.hls.hN.value = hls.h;
+    dom.hls.lS.value = dom.hls.lN.value = hls.l;
+    dom.hls.sS.value = dom.hls.sN.value = hls.s;
+    dom.hls.hN.style.borderColor = "";
+    dom.hls.lN.style.borderColor = "";
+    dom.hls.sN.style.borderColor = "";
+  }
+
+  updateSlidersAesthetics();
+  isUpdating = false;
+}
+
+function bindChannel(slider, input, onInputCallback) {
+  let lastValid = slider.value;
+
+  slider.addEventListener("input", () => {
+    input.value = slider.value;
+    lastValid = slider.value;
+    input.style.borderColor = "";
+    onInputCallback();
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const allowed = ["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Enter", "Home", "End"];
+    if (allowed.includes(e.key)) return;
+    if (!/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
+  });
+
+  input.addEventListener("input", () => {
+    let clean = input.value.replace(/\D/g, "");
+    if (clean !== input.value) {
+      input.value = clean;
+    }
+    if (clean === "") {
+      input.style.borderColor = "#ef4444";
+      return;
+    }
+    input.style.borderColor = "";
+    let num = parseInt(clean, 10);
+    const min = parseInt(slider.min, 10);
+    const max = parseInt(slider.max, 10);
+    if (num > max) num = max;
+    if (num < min) num = min;
+    input.value = num;
+    slider.value = num;
+    lastValid = num;
+    onInputCallback();
+  });
+
+  input.addEventListener("blur", () => {
+    if (input.value === "" || isNaN(parseInt(input.value, 10))) {
+      input.value = lastValid;
+      slider.value = lastValid;
+      input.style.borderColor = "";
+      onInputCallback();
+    }
+  });
+}
+
+function handleRgb() {
+  syncAll(parseInt(dom.rgb.rS.value), parseInt(dom.rgb.gS.value), parseInt(dom.rgb.bS.value), "rgb");
+}
+bindChannel(dom.rgb.rS, dom.rgb.rN, handleRgb);
+bindChannel(dom.rgb.gS, dom.rgb.gN, handleRgb);
+bindChannel(dom.rgb.bS, dom.rgb.bN, handleRgb);
+
+function handleCmyk() {
+  const rgb = cmykToRgb(
+    parseFloat(dom.cmyk.cS.value),
+    parseFloat(dom.cmyk.mS.value),
+    parseFloat(dom.cmyk.yS.value),
+    parseFloat(dom.cmyk.kS.value)
+  );
+  syncAll(rgb.r, rgb.g, rgb.b, "cmyk");
+}
+bindChannel(dom.cmyk.cS, dom.cmyk.cN, handleCmyk);
+bindChannel(dom.cmyk.mS, dom.cmyk.mN, handleCmyk);
+bindChannel(dom.cmyk.yS, dom.cmyk.yN, handleCmyk);
+bindChannel(dom.cmyk.kS, dom.cmyk.kN, handleCmyk);
+
+function handleHls() {
+  const rgb = hlsToRgb(
+    parseFloat(dom.hls.hS.value),
+    parseFloat(dom.hls.lS.value),
+    parseFloat(dom.hls.sS.value)
+  );
+  syncAll(rgb.r, rgb.g, rgb.b, "hls");
+}
+bindChannel(dom.hls.hS, dom.hls.hN, handleHls);
+bindChannel(dom.hls.lS, dom.hls.lN, handleHls);
+bindChannel(dom.hls.sS, dom.hls.sN, handleHls);
+
+dom.nativePicker.addEventListener("input", (e) => {
+  const rgb = hexToRgb(e.target.value);
+  if (rgb) syncAll(rgb.r, rgb.g, rgb.b, "picker");
+});
+
+dom.hexInput.addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const allowed = ["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight", "Enter", "Home", "End"];
+  if (allowed.includes(e.key)) return;
+  if (!/^[0-9a-fA-F#]$/.test(e.key)) {
+    e.preventDefault();
+  }
+});
+
+dom.hexInput.addEventListener("input", () => {
+  let raw = dom.hexInput.value.replace(/[^0-9A-Fa-f]/g, "").slice(0, 6).toUpperCase();
+  dom.hexInput.value = "#" + raw;
+  if (raw.length === 6) {
+    dom.hexInput.style.borderColor = "";
+    const rgb = hexToRgb("#" + raw);
+    if (rgb) syncAll(rgb.r, rgb.g, rgb.b, "hex");
+  } else {
+    dom.hexInput.style.borderColor = "#ef4444";
+  }
+});
+
+dom.hexInput.addEventListener("blur", () => {
+  dom.hexInput.style.borderColor = "";
+  if (dom.hexInput.value.length < 7) {
+    dom.hexInput.value = rgbToHex(parseInt(dom.rgb.rS.value), parseInt(dom.rgb.gS.value), parseInt(dom.rgb.bS.value));
+  }
+});
+
+syncAll(146, 75, 255, null);
+</script>
+</body>
+</html>
